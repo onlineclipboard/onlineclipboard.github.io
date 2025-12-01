@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Online Clipboard - Sync & Save Text Snippets</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom scrollbar for a more modern look */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64748b;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-out forwards;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+  <div class="min-h-screen flex flex-col">
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <svg class="w-8 h-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C6.095 4.01 5.25 4.973 5.25 6.108v9.642c0 1.267.933 2.37 2.131 2.457a48.413 48.413 0 001.124.08m-5.8 0c-.472-.03-.945-.062-1.417-.1a11.97 11.97 0 00-1.123.08c-1.135.094-1.976 1.057-1.976 2.192V16.5a2.25 2.25 0 002.25 2.25h5.379m1.13-1.571v-1.571" />
+          </svg>
+          <h1 class="text-2xl font-bold text-slate-900">Online Clipboard</h1>
+        </div>
+      </div>
+    </header>
+  
+    <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <div class="max-w-4xl mx-auto">
+        <!-- Tool Section -->
+        <section class="bg-white p-6 md:p-8 rounded-xl shadow-lg border border-slate-200">
+          <h2 class="text-2xl md:text-3xl font-bold text-center text-slate-800">Your Universal Clipboard is Here</h2>
+          <p class="mt-2 text-center text-slate-600">
+            Paste any text below and click "Add to Clipboard" to save it securely.
+          </p>
+          <div class="mt-6">
+            <textarea
+              id="newItemTextarea"
+              rows="5"
+              placeholder="Paste your text, code snippet, or link here..."
+              class="w-full p-4 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-150 ease-in-out text-base bg-slate-50"
+            ></textarea>
+            <button
+              id="addButton"
+              class="mt-4 w-full bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Add to Clipboard
+            </button>
+          </div>
+        </section>
+  
+        <!-- History Section -->
+        <section class="mt-12">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-slate-800">Clipboard History</h3>
+            <button id="clearAllButton" class="text-sm font-medium text-red-500 hover:text-red-700 transition hidden">
+                Clear All
+            </button>
+          </div>
+  
+          <div class="space-y-4" id="historyContainer">
+            <!-- Items will be dynamically inserted here -->
+          </div>
+
+          <div id="emptyState" class="text-center py-12 px-6 bg-white rounded-lg border border-slate-200 shadow-sm hidden">
+            <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-slate-900">No items yet</h3>
+            <p class="mt-1 text-sm text-slate-500">Your saved clipboard items will appear here.</p>
+          </div>
+        </section>
+  
+        <!-- SEO Content Section -->
+        <section class="mt-16 prose prose-indigo max-w-none prose-p:text-slate-600 prose-headings:text-slate-800">
+          <h2 class="text-3xl font-extrabold tracking-tight">
+            The Ultimate Online Clipboard: Sync, Save, and Share with Ease
+          </h2>
+          <p>In today's fast-paced digital world, we constantly juggle information across multiple devices and applications. An online clipboard is an indispensable tool that revolutionizes how you manage text and data, dramatically boosting your productivity and streamlining your workflow. It acts as a centralized hub for all your copied text, accessible whenever and wherever you need it.</p>
+          
+          <h3>Key Features of a Powerful Online Clipboard</h3>
+          <ul>
+            <li><strong>Cross-Device Synchronization:</strong> Seamlessly copy text on your desktop and paste it on your laptop or mobile phone. Your clipboard history is always in sync, eliminating the need to email snippets to yourself.</li>
+            <li><strong>Unlimited Clipboard History:</strong> Unlike the standard operating system clipboard that holds only one item at a time, an online clipboard saves a history of everything you copy. Easily find and reuse previously copied items without hassle.</li>
+            <li><strong>Secure and Private:</strong> Your data's security is paramount. A reliable online clipboard ensures that your snippets are stored securely, protecting sensitive information from unauthorized access. This tool runs entirely in your browser, and your data is saved only on your local device.</li>
+            <li><strong>Effortless Organization:</strong> Quickly search and filter through your clipboard history to find exactly what you're looking for. Spend less time hunting for information and more time getting things done.</li>
+          </ul>
+  
+          <h3>Who Can Benefit from an Online Clipboard?</h3>
+          <p>An online clipboard is a game-changer for a wide range of users:</p>
+          <ul>
+            <li><strong>Developers:</strong> Quickly save and reuse code snippets, commands, and URLs. Avoid retyping complex code and keep your workflow efficient.</li>
+            <li><strong>Writers and Researchers:</strong> Collect quotes, references, and research notes from various sources. Organize your findings in one central place for easy access when drafting your work.</li>
+            <li><strong>Students:</strong> Keep track of important information for assignments and projects. Save excerpts from online articles, lecture notes, and research papers with ease.</li>
+            <li><strong>Customer Support Agents:</strong> Store and quickly access canned responses, links, and customer information to provide faster and more consistent support.</li>
+          </ul>
+          <p>Ready to supercharge your productivity? Start using our Online Clipboard today. It's simple, secure, and completely free. Just paste your text in the box above to get started!</p>
+        </section>
+      </div>
+    </main>
+    
+    <footer class="bg-white mt-12 border-t">
+      <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-slate-500">
+        <p>&copy; 2026 Online Clipboard. All rights reserved. A simple tool for a more productive workflow.</p>
+      </div>
+    </footer>
+  </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const storageKey = 'onlineClipboardHistory';
+    let clipboardItems = [];
+
+    const newItemTextarea = document.getElementById('newItemTextarea');
+    const addButton = document.getElementById('addButton');
+    const historyContainer = document.getElementById('historyContainer');
+    const clearAllButton = document.getElementById('clearAllButton');
+    const emptyState = document.getElementById('emptyState');
+
+    const formatDate = (timestamp) => new Date(timestamp).toLocaleString();
+
+    const loadItemsFromStorage = () => {
+        const storedItems = localStorage.getItem(storageKey);
+        if (storedItems) {
+            try {
+                clipboardItems = JSON.parse(storedItems);
+            } catch (e) {
+                console.error('Failed to parse clipboard items from localStorage', e);
+                clipboardItems = [];
+            }
+        }
+    };
+
+    const saveItemsToStorage = () => {
+        localStorage.setItem(storageKey, JSON.stringify(clipboardItems));
+    };
+
+    const renderItems = () => {
+        historyContainer.innerHTML = ''; // Clear existing items
+        
+        if (clipboardItems.length === 0) {
+            emptyState.classList.remove('hidden');
+            clearAllButton.classList.add('hidden');
+        } else {
+            emptyState.classList.add('hidden');
+            clearAllButton.classList.remove('hidden');
+
+            clipboardItems.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in';
+                itemDiv.dataset.id = item.id;
+                
+                itemDiv.innerHTML = `
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm text-slate-500 font-mono truncate">${formatDate(item.createdAt)}</p>
+                      <p class="mt-1 text-slate-800 whitespace-pre-wrap break-words">${escapeHTML(item.text)}</p>
+                    </div>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                      <div class="relative w-20" id="copy-feedback-${item.id}">
+                          <button data-action="copy" title="Copy" class="p-2 text-slate-500 hover:bg-slate-100 hover:text-indigo-600 rounded-md transition">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                            </svg>
+                          </button>
+                      </div>
+                      <button data-action="delete" title="Delete" class="p-2 text-slate-500 hover:bg-slate-100 hover:text-red-600 rounded-md transition">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
+                    </div>
+                `;
+                
+                const copyButton = itemDiv.querySelector('button[data-action="copy"]');
+                const deleteButton = itemDiv.querySelector('button[data-action="delete"]');
+                
+                copyButton.addEventListener('click', () => copyItem(item.text, item.id));
+                deleteButton.addEventListener('click', () => removeItem(item.id));
+                
+                historyContainer.appendChild(itemDiv);
+            });
+        }
+        updateAddButtonState();
+    };
+    
+    const escapeHTML = (str) => {
+        const p = document.createElement("p");
+        p.appendChild(document.createTextNode(str));
+        return p.innerHTML;
+    };
+
+    const addItem = () => {
+        const text = newItemTextarea.value.trim();
+        if (!text) return;
+
+        const newItem = {
+            id: crypto.randomUUID(),
+            text: text,
+            createdAt: Date.now(),
+        };
+
+        clipboardItems.unshift(newItem);
+        saveItemsToStorage();
+        newItemTextarea.value = '';
+        renderItems();
+    };
+
+    const removeItem = (id) => {
+        clipboardItems = clipboardItems.filter(item => item.id !== id);
+        saveItemsToStorage();
+        renderItems();
+    };
+
+    const clearAllItems = () => {
+        if (confirm('Are you sure you want to clear all clipboard items?')) {
+            clipboardItems = [];
+            saveItemsToStorage();
+            renderItems();
+        }
+    };
+    
+    const copyItem = async (text, id) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            showCopiedFeedback(id);
+        } catch (err) {
+            console.error('Could not copy text: ', err);
+            // Fallback for older browsers
+            try {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand('copy');
+                showCopiedFeedback(id);
+                document.body.removeChild(textArea);
+            } catch (fallbackErr) {
+                 console.error('Fallback: Oops, unable to copy', fallbackErr);
+            }
+        }
+    };
+    
+    const showCopiedFeedback = (id) => {
+        const feedbackContainer = document.getElementById(`copy-feedback-${id}`);
+        if (!feedbackContainer) return;
+        
+        const originalButton = feedbackContainer.innerHTML;
+        feedbackContainer.innerHTML = `<span class="text-sm text-green-600 font-semibold">Copied!</span>`;
+        
+        setTimeout(() => {
+            const currentContainer = document.getElementById(`copy-feedback-${id}`);
+            if (currentContainer) {
+                 currentContainer.innerHTML = originalButton;
+                 // Re-attach event listener
+                 const copyButton = currentContainer.querySelector('button[data-action="copy"]');
+                 const item = clipboardItems.find(i => i.id === id);
+                 if (copyButton && item) {
+                    copyButton.addEventListener('click', () => copyItem(item.text, item.id));
+                 }
+            }
+        }, 2000);
+    };
+
+    const updateAddButtonState = () => {
+        addButton.disabled = !newItemTextarea.value.trim();
+    };
+    
+    // Event Listeners
+    addButton.addEventListener('click', addItem);
+    clearAllButton.addEventListener('click', clearAllItems);
+    newItemTextarea.addEventListener('input', updateAddButtonState);
+
+    // Initial Load
+    loadItemsFromStorage();
+    renderItems();
+});
+</script>
+
+</body>
+</html>
